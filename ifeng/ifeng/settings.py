@@ -111,4 +111,4 @@ REDIS_ITEMS_KEY = '%(spider)s:items'
 
 # 指定用于连接redis的URL（可选）
 # 如果设置此项，则此项优先级高于设置的REDIS_HOST 和 REDIS_PORT
-REDIS_URL = 'redis://192.168.0.56:6379'
+REDIS_URL = 'redis://192.168.0.55:6379'

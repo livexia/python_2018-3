@@ -14,15 +14,15 @@ class NewsSpider(scrapy.Spider):
     #{0}:新闻类型，{1}:时间，{2}:页数
     #类型：{'11528': '大陆', '11574': '国际', '11502': '即时'}
     news_base_url = 'http://news.ifeng.com/listpage/{0}/{1}/{2}/rtlist.shtml'
-    today = datetime.datetime.now().strftime("%Y%m%d")
-    start_urls = [news_base_url.format('11528',20180317,1)]
+    today = datetime.datetime.now()
+    delta = 90
+    start_urls = [news_base_url.format('11528',today.strftime("%Y%m%d"),1)]
     print(start_urls)
-
 
     def parse(self, response):
         resp = Selector(response)
         url = iter(resp.xpath('.//div[@class="newsList"]//li/a/@href').extract())
-
+        self.delta -= 1
         try:
             while 1:
                 news_url = next(url)
@@ -32,6 +32,14 @@ class NewsSpider(scrapy.Spider):
             if url:
                 print("爬取下一页")
                 yield Request(url[0], callback=self.parse)
+        finally:
+            if self.delta > 0:
+                print("爬取下一天")
+                date = (self.today - datetime.timedelta(days=self.delta)).strftime("%Y%m%d")
+                url = self.news_base_url.format('11528',date,1)
+                yield Request(url, callback=self.parse)
+            else:
+                print("爬取完成90天内的新闻")
 
     def parse_news(self, response):
         #获得新闻内容
