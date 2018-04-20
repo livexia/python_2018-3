@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Scrapy settings for ifeng project
+# Scrapy settings for news project
 #
 # For simplicity, this file contains only settings considered important or
 # commonly used. You can find more settings consulting the documentation:
@@ -9,14 +9,14 @@
 #     http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
 #     http://scrapy.readthedocs.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'ifeng'
+BOT_NAME = 'news'
 
-SPIDER_MODULES = ['ifeng.spiders']
-NEWSPIDER_MODULE = 'ifeng.spiders'
+SPIDER_MODULES = ['news.spiders']
+NEWSPIDER_MODULE = 'news.spiders'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'ifeng (+http://www.yourdomain.com)'
+#USER_AGENT = 'news (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
@@ -47,16 +47,15 @@ ROBOTSTXT_OBEY = True
 # Enable or disable spider middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/spider-middleware.html
 #SPIDER_MIDDLEWARES = {
-#    'ifeng.middlewares.IfengSpiderMiddleware': 543,
+#    'news.middlewares.NewsSpiderMiddleware': 543,
 #}
 
 # Enable or disable downloader middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
     'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
-    'ifeng.middlewares.RotateUserAgentMiddleware': 400,
+    'myspider.middlewares.RotateUserAgentMiddleware': 400,
 }
-
 
 # Enable or disable extensions
 # See http://scrapy.readthedocs.org/en/latest/topics/extensions.html
@@ -66,9 +65,9 @@ DOWNLOADER_MIDDLEWARES = {
 
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'ifeng.pipelines.IfengPipeline': 300,
-#}
+ITEM_PIPELINES = {
+   'myspider.pipelines.MongoPipeline': 300,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html
@@ -91,24 +90,8 @@ DOWNLOADER_MIDDLEWARES = {
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
-# 指定使用scrapy-redis的Scheduler
-SCHEDULER = "scrapy_redis.scheduler.Scheduler"
-
-# 在redis中保持scrapy-redis用到的各个队列，从而允许暂停和暂停后恢复
-SCHEDULER_PERSIST = True
-
-# 指定排序爬取地址时使用的队列，默认是按照优先级排序
-SCHEDULER_QUEUE_CLASS = 'scrapy_redis.queue.SpiderPriorityQueue'
-
-DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
-
-ITEM_PIPELINES = {
-   'scrapy_redis.pipelines.RedisPipeline': 400
-}
-
-# 序列化项目管道作为redis Key存储
-REDIS_ITEMS_KEY = '%(spider)s:items'
-
-# 指定用于连接redis的URL（可选）
-# 如果设置此项，则此项优先级高于设置的REDIS_HOST 和 REDIS_PORT
-REDIS_URL = 'redis://192.168.0.5:6379'
+#连接数据库的信息，存到mydb的articles数据集中
+MONGODB_HOST='127.0.0.1'
+MONGODB_PORT=27018
+MONGODB_DATABASE='news'
+# MONGODB_COLLECTION='news'
