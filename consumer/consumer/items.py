@@ -11,4 +11,15 @@ import scrapy
 class ConsumerItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
+    _id = scrapy.Field()    #url
     pass
+
+
+class BroadcrawlerItem(scrapy.Item):
+    # define the fields for your item here like:
+    # name = scrapy.Field()
+    title = scrapy.Field()
+    pubtime = scrapy.Field()
+    url = scrapy.Field()
+    content = scrapy.Field()
+    author = scrapy.Field()

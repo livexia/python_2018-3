@@ -88,3 +88,27 @@ ROBOTSTXT_OBEY = True
 #HTTPCACHE_DIR = 'httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+
+# 指定使用scrapy-redis的Scheduler
+SCHEDULER = "scrapy_redis.scheduler.Scheduler"
+
+# 在redis中保持scrapy-redis用到的各个队列，从而允许暂停和暂停后恢复
+SCHEDULER_PERSIST = True
+
+# 指定排序爬取地址时使用的队列，默认是按照优先级排序
+SCHEDULER_QUEUE_CLASS = 'scrapy_redis.queue.SpiderPriorityQueue'
+
+DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
+
+ITEM_PIPELINES = {
+   'scrapy_redis.pipelines.RedisPipeline': 400
+}
+
+# 序列化项目管道作为redis Key存储
+REDIS_ITEMS_KEY = '%(spider)s:items'
+
+# 指定用于连接redis的URL（可选）
+# 如果设置此项，则此项优先级高于设置的REDIS_HOST 和 REDIS_PORT
+REDIS_URL = 'redis://192.168.0.101:6380'
+
+DEPTH_LIMIT = 5
