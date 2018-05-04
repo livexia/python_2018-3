@@ -10,7 +10,7 @@ from consumer.general_redis import GeneralRedis
 import itertools
 import datetime
 import re
-from newspaper import Article, Config
+from newspaper import Article, Config, ArticleException
 
 
 class ConsumerSpider(RedisCrawlSpider):
@@ -18,26 +18,32 @@ class ConsumerSpider(RedisCrawlSpider):
     allowed_domains = ['sina.com.cn', 'sohu.com', 'ifeng.com']
     redis_key = "consumer:start_urls"
     index_key = "consumer:index_urls"
-    rules = (Rule(LinkExtractor(allow=()), callback='parse_a', follow=True),)
+    # TODO: 增加更多的规则，限制index url的数量，以及排除部分关键字
+    rules = (Rule(LinkExtractor(allow=(), allow_domains=allowed_domains), callback='parse_a', follow=True),)
     g = GeneralRedis()
-    c = Config()
-    c.fetch_images = False
+    config = Config()
+    config.fetch_images = False
+    config.language = 'zh'
+
     def parse_a(self, response):
-        news= BroadcrawlerItem()
-        a = Article('', language='zh', config=self.c)
-        resp = response.body
-        a.download(input_html=resp)
-        a.parse()
+        item = BroadcrawlerItem()
+        try:
+            article = Article(url='', config=self.config)
+            if response:
+                article.download(input_html=response)
+                article.parse()
+                if article.is_news:
+                    item['title'] = article.title
+                    if isinstance(article.publish_date, datetime.datetime):
+                        item['pubtime'] = article.publish_date.strftime("%Y-%m-%d %H:%M:%S")
+                    else:
+                        item['pubtime'] = "N/A"
+                    item['content'] = article.text
+                    item['url'] = response.url
+                    item['author'] = article.authors
+                    yield item
+                else:
+                    self.g.save_set('consumer:index_urls', response.url)
 
-        urls = LinkExtractor(allow=(), allow_domains=self.allowed_domains).extract_links(response)
-
-        if len(urls) > 30:
-            self.g.save_list(self.index_key, response.url)
-
-        print(response.url)
-        news['title'] = a.title
-        news['pubtime'] = a.publish_date
-        news['url'] = response.url
-        news['content'] = a.text
-        news['author'] = a.authors
-        yield news
+        except ArticleException:
+            pass
