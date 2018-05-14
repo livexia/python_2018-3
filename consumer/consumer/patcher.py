@@ -1,3 +1,4 @@
+import datetime
 import re
 import logging
 import copy
@@ -38,7 +39,7 @@ class NewspaperPatcher():
 
         # connect the extension object to signals
         crawler.signals.connect(ext.enable_patch, signal=signals.engine_started)
-        crawler.signals.connect(ext.disable_patch, signal=signals.engine_stopped)
+        # crawler.signals.connect(ext.disable_patch, signal=signals.engine_stopped)
 
         # return the extension object
         return ext
@@ -70,7 +71,7 @@ def download(self, input_html=None, input_url=None, title=None, recursion_counte
     input_url here is to solve the problem that gives input_html and url could be none or wrong
     and add another method which gives response then return html to avoid messy code
     """
-    # logger.info('Custom download()...')
+    # logger.debug("custom download")
     if input_html is None:
         try:
             html = network.get_html_2XX_only(self.url, self.config)
@@ -78,7 +79,7 @@ def download(self, input_html=None, input_url=None, title=None, recursion_counte
             self.download_state = ArticleDownloadState.FAILED_RESPONSE
             self.download_exception_msg = str(e)
             logger.warning('Download failed on URL %s because of %s' %
-                           (self.url, self.download_exception_msg))
+                      (self.url, self.download_exception_msg))
             return
     elif isinstance(input_html, (Response, HtmlResponse)):
         def _get_html_from_response(response):
@@ -93,16 +94,17 @@ def download(self, input_html=None, input_url=None, title=None, recursion_counte
                         response.encoding = encodings[0]
                         html = response.text
             return html or ''
-
+        # logger.debug("Get HTML by delivering HTMLRESPONSE OR RESPONSE")
         html = _get_html_from_response(input_html)
         if html != '':
             self.url = input_html.url
     else:
+        # logger.debug("Get HTML by delivering html's content")
         html = input_html
         if input_url is not None:
             self.url = input_url
         else:
-            logger.warning("Warning...input_url must not none")
+            logger.warning("input_url must not none")
             raise Exception
 
     if self.config.follow_meta_refresh:
@@ -128,16 +130,13 @@ def get_publishing_date(self, url, html, doc):
     3. Pubdate from URL
     4. Assume this moment as published_date
     """
-
-    # logger.info("Custom get publishing_date method ...")
-
+    # logger.debug("custom get publish date")
     def parse_date_str(date_str):
         if date_str:
             try:
                 return date_parser(date_str)
             except (ValueError, OverflowError, AttributeError, TypeError):
-                logger.info("Here is url and date_str catched...")
-                print(date_str, url)
+                logger.error("error occurs when parse date str: %s url: %s ",date_str, url)
                 return None
 
     PUBLISH_DATE_TAGS = [
@@ -175,7 +174,7 @@ def get_publishing_date(self, url, html, doc):
                 known_meta_tag['content'])
             datetime_obj = parse_date_str(date_str)
             if datetime_obj:
-                # print("from meta...")
+                # logger.debug("extract date from meta")
                 return datetime_obj
 
     date_match_fhtml = re.search(DATE_REGEX + " " + TIME_REGEX, html)
@@ -184,7 +183,7 @@ def get_publishing_date(self, url, html, doc):
         date_str = date_match_fhtml.group(0)
         datetime_obj = parse_date_str(date_str)
         if datetime_obj:
-            # print("from raw html...")
+            # logger.debug("extract date from html")
             return datetime_obj
 
     date_match = re.search(urls.STRICT_DATE_REGEX, url)
@@ -192,12 +191,12 @@ def get_publishing_date(self, url, html, doc):
         date_str = date_match.group(0)
         datetime_obj = parse_date_str(date_str)
         if datetime_obj:
-            # print("from url...")
+            # logger.debug("extract date from url")
             return datetime_obj
 
-    return None
     # debug for testing methods above
-    # return datetime.now()
+    # logger.debug("date from exactly now")
+    return datetime.datetime.now()
 
 
 def get_authors(self, doc):
@@ -208,7 +207,8 @@ def get_authors(self, doc):
     """
     Only add CUSTOM tag to extract authors
     """
-    # logger.info("Cunstom get_authors method ...")
+    # logger.debug("custom get authors")
+
     _digits = re.compile('\d')
 
     def contains_digits(d):
@@ -272,7 +272,7 @@ def get_authors(self, doc):
     # Try 1: Search popular author tags for authors
 
     ATTRS = ['name', 'rel', 'itemprop', 'class', 'id']
-    VALS = ['author', 'byline', 'dc.creator', 'article-editor']
+    VALS = ['author', 'byline', 'dc.creator','article-editor']
     matches = []
     authors = []
 
@@ -310,7 +310,7 @@ def parse(self):
     """
     Only change get_publish_date
     """
-    # logger.info("Custom parse...")
+    # logger.debug("custom parse")
     self.throw_if_not_downloaded_verbose()
 
     self.doc = self.config.get_parser().fromstring(self.html)
@@ -327,7 +327,11 @@ def parse(self):
     document_cleaner = DocumentCleaner(self.config)
     output_formatter = OutputFormatter(self.config)
 
-    title, is_news = self.extractor.get_title(self.clean_doc)
+    try:
+        title, is_news = self.extractor.get_title(self.clean_doc)
+    except:
+        title = ''
+        is_news = False
     self.set_title(title)
     self.is_news = is_news
 
@@ -437,10 +441,11 @@ def get_title(self, doc):
         # clean double spaces
         title_text_h1 = ' '.join([x for x in title_text_h1.split() if x])
 
+
     def is_news_page(h1, title):
-        if h1 == '':
+        if h1 == '' or h1 is None:
             return False
-        else:
+        else :
             similarity = difflib.SequenceMatcher(None, h1, title).quick_ratio()
             if similarity < 0.46:
                 return False
@@ -449,10 +454,11 @@ def get_title(self, doc):
 
     is_news = is_news_page(title_text_h1, title_text)
 
+
     # title from og:title
     title_text_fb = (
-            self.get_meta_content(doc, 'meta[property="og:title"]') or
-            self.get_meta_content(doc, 'meta[name="og:title"]') or '')
+    self.get_meta_content(doc, 'meta[property="og:title"]') or
+    self.get_meta_content(doc, 'meta[name="og:title"]') or '')
 
     # create filtered versions of title_text, title_text_h1, title_text_fb
     # for finer comparison

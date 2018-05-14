@@ -60,7 +60,7 @@ ROBOTSTXT_OBEY = True
 EXTENSIONS = {
     # 'scrapy.extensions.telnet.TelnetConsole': None,
     'consumer.patcher.NewspaperPatcher': 500,
-    'consumer.scheduler_index.MakeSaveRequest': None,
+    'consumer.scheduler_index.MakeSaveRequest': 500,
 }
 
 # Configure item pipelines
@@ -111,7 +111,9 @@ REDIS_ITEMS_KEY = '%(spider)s:items'
 
 # 指定用于连接redis的URL（可选）
 # 如果设置此项，则此项优先级高于设置的REDIS_HOST 和 REDIS_PORT
-REDIS_URL = 'redis://192.168.0.101:6380'
+# REDIS_URL = 'redis://127.0.0.1:6380'
+REDIS_HOST = '127.0.0.1'
+REDIS_PORT = '6380'
 
 DEPTH_LIMIT = 5
 

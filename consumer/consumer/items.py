@@ -8,10 +8,10 @@
 import scrapy
 
 
-class ConsumerItem(scrapy.Item):
+class IndexItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
-    _id = scrapy.Field()    #url
+    url = scrapy.Field()    #url
     pass
 
 
@@ -23,3 +23,4 @@ class BroadcrawlerItem(scrapy.Item):
     url = scrapy.Field()
     content = scrapy.Field()
     author = scrapy.Field()
+    _id = scrapy.Field()
