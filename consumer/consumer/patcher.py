@@ -1,8 +1,15 @@
-import datetime
 import re
-import logging
+
 import copy
-from newspaper import network, urls, Article
+from collections import Iterable
+import sys
+import logging
+
+import datetime
+
+from lxml import etree
+from lxml.etree import dump
+from newspaper import network, urls, Article, Config
 from newspaper.cleaners import DocumentCleaner
 from newspaper.extractors import ContentExtractor, PIPE_SPLITTER, DASH_SPLITTER, UNDERSCORE_SPLITTER, ARROWS_SPLITTER, \
     SLASH_SPLITTER, MOTLEY_REPLACEMENT
@@ -15,40 +22,53 @@ import sys
 import importlib
 from newspaper.videos.extractors import VideoExtractor
 from requests import Response
-from scrapy.http import HtmlResponse
 from scrapy import signals
+from scrapy.exceptions import NotConfigured
+from scrapy.http import HtmlResponse
 import difflib
 
-DATE_REGEX = r'([\./\-_]{0,1}(19|20)\d{2})[\./\-_]{0,1}(([0-3]{0,1}[0-9]|[A-Za-z]{3,5})[\./\-_]{0,1})([0-3]{0,1}[0-9])'
-TIME_REGEX = r'(\d{2}:\d{2}:\d{2})'
+DATE_REGEX = r'(([\./\-_年月日]{0,1}(19|20)\d{2})[\./\-_年月日]{0,1}(([0-3]{0,1}[0-9]|[A-Za-z]{3,5})[\./\-_年月日]{0,1})([0-3]{0,1}[0-9]))/'
+TIME_REGEX = r'(\d{2}:\d{2}(:\d{2})?)'
 FAIL_ENCODING = "ISO-8859-1"
+# 针对url中/DATETIME/这样格式 不适用类似/08/05/12/ (实际上是20080512)
+EXTRACT_DATE_FROM_URL_REGEX = r'(?<=\W)' + DATE_REGEX
+# 针对html中 yy[splitter]mm[splitter]dd H:M(:S) 进行提取
+EXTRACT_DATE_FROM_HTML_REGEX = DATE_REGEX + " " + TIME_REGEX
 
-logger = logging.getLogger('NewspaperPatcher')
+logger = logging.getLogger(__name__)
 
-
-class NewspaperPatcher():
-
-    def __init__(self):
-        # logger.info("Enable patch")
-        pass
-
+class Patcher():
     @classmethod
     def from_crawler(cls, crawler):
+        if not crawler.settings.getbool("PATCHER_ENABLED"):
+            raise NotConfigured
+        # get the number of items from settings
+
         # instantiate the extension object
         ext = cls()
 
         # connect the extension object to signals
-        crawler.signals.connect(ext.enable_patch, signal=signals.engine_started)
-        # crawler.signals.connect(ext.disable_patch, signal=signals.engine_stopped)
+        crawler.signals.connect(ext.spider_opened, signal=signals.spider_opened)
+        crawler.signals.connect(ext.spider_closed, signal=signals.spider_closed)
 
         # return the extension object
         return ext
 
+    def spider_opened(self, spider):
+        logger.info("opened spider %s", spider.name)
+        self.enable_patch()
+
+    def spider_closed(self, spider):
+        logger.info("closed spider %s", spider.name)
+
+
     def enable_patch(self):
-        logger.info("Enable monkey patch")
         Article.download = download
         Article.parse = parse
         Article.is_news = None
+        Article.get_is_news = get_is_news
+        Article.h1 = None
+        Config.fetch_videos = None
         ContentExtractor.get_publishing_date = get_publishing_date
         ContentExtractor.get_authors = get_authors
         ContentExtractor.get_title = get_title
@@ -104,8 +124,8 @@ def download(self, input_html=None, input_url=None, title=None, recursion_counte
         if input_url is not None:
             self.url = input_url
         else:
-            logger.warning("input_url must not none")
-            raise Exception
+            # logger.warning("input_url must not none")
+            raise Exception("input_url must not none")
 
     if self.config.follow_meta_refresh:
         meta_refresh_url = extract_meta_refresh(html)
@@ -116,6 +136,9 @@ def download(self, input_html=None, input_url=None, title=None, recursion_counte
 
     self.set_html(html)
     self.set_title(title)
+
+def get_is_news(self):
+    return self.is_news
 
 
 def get_publishing_date(self, url, html, doc):
@@ -136,7 +159,7 @@ def get_publishing_date(self, url, html, doc):
             try:
                 return date_parser(date_str)
             except (ValueError, OverflowError, AttributeError, TypeError):
-                logger.error("error occurs when parse date str: %s url: %s ",date_str, url)
+                # logger.error("error occurs when parse date str: %s url: %s ",date_str, url)
                 return None
 
     PUBLISH_DATE_TAGS = [
@@ -177,7 +200,7 @@ def get_publishing_date(self, url, html, doc):
                 # logger.debug("extract date from meta")
                 return datetime_obj
 
-    date_match_fhtml = re.search(DATE_REGEX + " " + TIME_REGEX, html)
+    date_match_fhtml = re.search(EXTRACT_DATE_FROM_HTML_REGEX, html)
     # print(date_match_fhtml)
     if date_match_fhtml:
         date_str = date_match_fhtml.group(0)
@@ -186,7 +209,7 @@ def get_publishing_date(self, url, html, doc):
             # logger.debug("extract date from html")
             return datetime_obj
 
-    date_match = re.search(urls.STRICT_DATE_REGEX, url)
+    date_match = re.search(EXTRACT_DATE_FROM_URL_REGEX, url)
     if date_match:
         date_str = date_match.group(0)
         datetime_obj = parse_date_str(date_str)
@@ -196,7 +219,7 @@ def get_publishing_date(self, url, html, doc):
 
     # debug for testing methods above
     # logger.debug("date from exactly now")
-    return datetime.datetime.now()
+    # return datetime.datetime.now()
 
 
 def get_authors(self, doc):
@@ -305,7 +328,13 @@ def get_authors(self, doc):
     #    return [] # Failed to find anything
     # return authors
 
-
+# TODO: 拟定parse 达到这种效果
+# def parse():
+#     preparse()
+#     if is_news:
+#         parse()
+#     else:
+#         pass
 def parse(self):
     """
     Only change get_publish_date
@@ -328,15 +357,32 @@ def parse(self):
     output_formatter = OutputFormatter(self.config)
 
     try:
-        title, is_news = self.extractor.get_title(self.clean_doc)
-    except:
-        title = ''
-        is_news = False
+        title, is_news, h1 = self.extractor.get_title(self.clean_doc)
+    except ValueError:
+        logger.error("title %s is_news %s h1 %s", title, is_news, h1)
     self.set_title(title)
     self.is_news = is_news
 
+    if h1:
+        self.h1 = h1[:self.config.MAX_TITLE]
+
     authors = self.extractor.get_authors(self.clean_doc)
     self.set_authors(authors)
+
+    self.publish_date = self.extractor.get_publishing_date(
+        self.url,
+        self.html,
+        self.clean_doc)
+
+    if self.publish_date is None:
+        self.is_news = False
+
+    # 只通过这些字段判断是不是新闻 太不负责任了
+    # 要不手动创建白名单和黑名单
+    # 简单质量高
+    # if self.is_news == False:
+    #     self.is_parsed = True
+    #     return
 
     meta_lang = self.extractor.get_meta_lang(self.clean_doc)
     self.set_meta_language(meta_lang)
@@ -366,18 +412,16 @@ def parse(self):
     meta_data = self.extractor.get_meta_data(self.clean_doc)
     self.set_meta_data(meta_data)
 
-    self.publish_date = self.extractor.get_publishing_date(
-        self.url,
-        self.html,
-        self.clean_doc)
-
     # Before any computations on the body, clean DOM object
     self.doc = document_cleaner.clean(self.doc)
-
+    # dump(self.doc)
     self.top_node = self.extractor.calculate_best_node(self.doc)
     if self.top_node is not None:
-        video_extractor = VideoExtractor(self.config, self.top_node)
-        self.set_movies(video_extractor.get_videos())
+        # 作者这里没有控制是否要提取video，我们这里有两种办法，一种是直接注释掉
+        # 一种是加上控制
+        if self.config.fetch_videos:
+            video_extractor = VideoExtractor(self.config, self.top_node)
+            self.set_movies(video_extractor.get_videos())
 
         self.top_node = self.extractor.post_cleanup(self.top_node)
         self.clean_top_node = copy.deepcopy(self.top_node)
@@ -386,6 +430,12 @@ def parse(self):
             self.top_node)
         self.set_article_html(article_html)
         self.set_text(text)
+    else:
+        self.is_news = False
+
+    if self.is_news == False:
+        self.is_parsed = True
+
 
     if self.config.fetch_images:
         self.fetch_images()
@@ -415,7 +465,7 @@ def get_title(self, doc):
     title_element = self.parser.getElementsByTag(doc, tag='title')
     # no title found
     if title_element is None or len(title_element) == 0:
-        return title
+        return title, False, ''
 
     # title elem found
     title_text = self.parser.getText(title_element[0])
@@ -441,13 +491,17 @@ def get_title(self, doc):
         # clean double spaces
         title_text_h1 = ' '.join([x for x in title_text_h1.split() if x])
 
-
+    """
+    similarity = 2.0 * M/T M 是两个串的相似的数量 T是两个串的总数量
+    例如 a 是 Marvel b 是漫威 similarity = 2.0 * 2 /12 = 0.333333
+    不符合我们的逻辑
+    """
     def is_news_page(h1, title):
         if h1 == '' or h1 is None:
             return False
         else :
             similarity = difflib.SequenceMatcher(None, h1, title).quick_ratio()
-            if similarity < 0.46:
+            if similarity is None or similarity == 0.0:
                 return False
             else:
                 return True
@@ -522,4 +576,8 @@ def get_title(self, doc):
     if filter_title_text_h1 == filter_title:
         title = title_text_h1
 
-    return title, is_news
+    return title, is_news, title_text_h1
+
+
+
+# cleaner div_to_para 为什么只处理空div
