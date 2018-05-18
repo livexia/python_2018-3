@@ -37,7 +37,7 @@ EXTRACT_DATE_FROM_HTML_REGEX = DATE_REGEX + " " + TIME_REGEX
 
 logger = logging.getLogger(__name__)
 
-class Patcher():
+class NewspaperPatcher():
     @classmethod
     def from_crawler(cls, crawler):
         if not crawler.settings.getbool("PATCHER_ENABLED"):
