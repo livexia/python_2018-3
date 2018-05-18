@@ -42,30 +42,33 @@ class MongoPipeline(object):
         try:
             if type(item).__name__ == 'IndexItem':
 
-                flag = input("{} type:".format(data['url']))
-                result = urlparse(data['url'])
-                domain_url = (result.scheme + "://" + result.netloc).encode('utf-8')
-                none_query_url = (result.scheme + "://" + result.netloc + result.path).encode('utf-8')
+                self.g.save_set(self.s.get('WHITELIST_DOMAINS'), data['url'])
+                logging.info('Add domain on whitelist {}'.format(data['url']))
 
-                if flag == '0':
-                    self.g.save_set(self.s.get('WHITELIST_DOMAINS'), domain_url)
-                    logging.info('Add domain on whitelist {}'.format(domain_url))
-                elif flag == '1':
-                    self.g.save_set(self.s.get('WHITELIST_URLS'), none_query_url)
-                    logging.info('Add domain on whitelist {}'.format(none_query_url))
-
-                elif flag == '2':
-                    self.g.save_set(self.s.get('BLACKLIST_DOMAINS'), domain_url)
-                    logging.info('Add domain on blacklist {}'.format(domain_url))
-                elif flag == '3':
-                    self.g.save_set(self.s.get('BLACKLIST_URLS'), none_query_url)
-                    logging.info('Add domain on blacklist {}'.format(none_query_url))
-                elif flag == '4':
-                    url = input("input url to add blacklist：")
-                    self.g.save_set(self.s.get('BLACKLIST_URLS'), url)
-                    logging.info('Add domain on blacklist {}'.format(url))
-                else:
-                    pass
+                # flag = input("{} type:".format(data['url']))
+                # result = urlparse(data['url'])
+                # domain_url = (result.scheme + "://" + result.netloc).encode('utf-8')
+                # none_query_url = (result.scheme + "://" + result.netloc + result.path).encode('utf-8')
+                #
+                # if flag == '0':
+                #     self.g.save_set(self.s.get('WHITELIST_DOMAINS'), domain_url)
+                #     logging.info('Add domain on whitelist {}'.format(domain_url))
+                # elif flag == '1':
+                #     self.g.save_set(self.s.get('WHITELIST_URLS'), none_query_url)
+                #     logging.info('Add domain on whitelist {}'.format(none_query_url))
+                #
+                # elif flag == '2':
+                #     self.g.save_set(self.s.get('BLACKLIST_DOMAINS'), domain_url)
+                #     logging.info('Add domain on blacklist {}'.format(domain_url))
+                # elif flag == '3':
+                #     self.g.save_set(self.s.get('BLACKLIST_URLS'), none_query_url)
+                #     logging.info('Add domain on blacklist {}'.format(none_query_url))
+                # elif flag == '4':
+                #     url = input("input url to add blacklist：")
+                #     self.g.save_set(self.s.get('BLACKLIST_URLS'), url)
+                #     logging.info('Add domain on blacklist {}'.format(url))
+                # else:
+                #     pass
 
 
                 raise DropItem("Index item found: %s" % item)
