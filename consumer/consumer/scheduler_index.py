@@ -1,4 +1,4 @@
-from general_redis import GeneralRedis
+from .general_redis import GeneralRedis
 from urllib.parse import urlparse
 import pickle
 import time

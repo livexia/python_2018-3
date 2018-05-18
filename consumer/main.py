@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys, time
 from scrapy import cmdline
-import redis
-from scheduler_index import MakeSaveRequest
 
 if __name__ == '__main__':
     try:

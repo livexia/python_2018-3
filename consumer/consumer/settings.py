@@ -51,16 +51,16 @@ ROBOTSTXT_OBEY = True
 
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
-# DOWNLOADER_MIDDLEWARES = {
-#    'consumer.middlewares.ConsumerDownloaderMiddleware': 543,
-# }
+DOWNLOADER_MIDDLEWARES = {
+   'consumer.middlewares.ConsumerDownloaderMiddleware': 543,
+}
 
 # Enable or disable extensions
 # See https://doc.scrapy.org/en/latest/topics/extensions.html
 EXTENSIONS = {
     # 'scrapy.extensions.telnet.TelnetConsole': None,
     'consumer.patcher.NewspaperPatcher': 500,
-    'consumer.scheduler_index.MakeSaveRequest': 500,
+    'consumer.scheduler_index.MakeSaveRequest': None,
 }
 
 # Configure item pipelines
@@ -97,7 +97,8 @@ SCHEDULER = "scrapy_redis.scheduler.Scheduler"
 SCHEDULER_PERSIST = True
 
 # 指定排序爬取地址时使用的队列，默认是按照优先级排序
-SCHEDULER_QUEUE_CLASS = 'scrapy_redis.queue.SpiderPriorityQueue'
+# SCHEDULER_QUEUE_CLASS = 'scrapy_redis.queue.SpiderPriorityQueue'
+SCHEDULER_QUEUE_CLASS = 'scrapy_redis.queue.FifoQueue'
 
 DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
 
@@ -125,3 +126,6 @@ MONGODB_PORT = 32679
 MONGODB_DBNAME = "Extract_News"
 # 存放数据的表名称
 MONGODB_SHEETNAME = "Item"
+
+
+CONCURRENT_REQUESTS = 100

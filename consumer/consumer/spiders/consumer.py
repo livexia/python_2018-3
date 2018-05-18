@@ -15,6 +15,7 @@ deny_regex = 'slide|blog|auto|weibo|baby|vip|book|picture|photo|video|tags|comme
 class ConsumerSpider(RedisCrawlSpider):
     name = "consumer"
     allowed_domains = ['sina.com.cn', 'sohu.com', 'ifeng.com']
+    # allowed_domains = ['news.sina.com.cn']
     denied_domains = ['ka.sina.com.cn']
     redis_key = "consumer:start_urls"
     index_key = "consumer:index_urls"

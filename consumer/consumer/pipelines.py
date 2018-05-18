@@ -7,7 +7,7 @@
 import pymongo, logging
 from scrapy.exceptions import DropItem
 from consumer.general_redis import GeneralRedis
-
+from urllib.parse import urlparse
 
 
 logger = logging.getLogger('MongoPipeline')
@@ -41,7 +41,15 @@ class MongoPipeline(object):
         data = dict(item)
         try:
             if type(item).__name__ == 'IndexItem':
-                self.g.save_set('consumer:index_urls', data['url'])
+                domain = urlparse(data['url'])
+                index_url = (domain.scheme + "://" + domain.netloc).encode('utf-8')
+                flag = input("{} type:".format(data['url']))
+                if flag == '0':
+                    self.g.save_set('consumer:whitelist', data['url'])
+                elif flag == '1':
+                    self.g.save_set('consumer:blacklist', index_url)
+                elif flag == '2':
+                    self.g.save_set('consumer:blacklist', data['url'])
                 raise DropItem("Index item found: %s" % item)
             else:
                 match_doc = self.post.find_one({"_id": data['_id']})
@@ -55,4 +63,5 @@ class MongoPipeline(object):
                     self.post.insert_one(data)
                 return item
         except DropItem as e:
-            print(e)
+            pass
+            return item
