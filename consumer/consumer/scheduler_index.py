@@ -9,13 +9,13 @@ from scrapy import signals
 class MakeSaveRequest():
     logger = logging.getLogger('Update request')
     timer = 0
-    already_scheduler = 0
+    flag = 0
 
     def __init__(self, settings=None):
         self.s = settings
         self.start = time.clock()
         self.timer = time.clock()
-        self.already_scheduler = 0
+        self.flag = 0
 
     @classmethod
     def from_crawler(cls, crawler):
@@ -49,26 +49,38 @@ class MakeSaveRequest():
         }
         return pickle.dumps(d)
 
-    def insert_request(self):
+    def insert_domain_request(self):
         g = GeneralRedis(self.s.get('REDIS_HOST'), self.s.get('REDIS_PORT'))
-        s = g.read_set('consumer:index_urls')
+        s = g.read_set(self.s.get('WHITELIST_DOMAIN'))
         try:
             for i in s:
                 r = self.make_request(i)
-                g.save_sorted_set('consumer:requests', r, -5)
+                g.save_sorted_set(self.s.get('REQUEST_KEY'), r, -10)
+            self.logger.warning("Save {} requests successful".format(len(s)))
+        except:
+            self.logger.warning("Save {} requests failed".format(len(s)))
+
+    def insert_url_request(self):
+        g = GeneralRedis(self.s.get('REDIS_HOST'), self.s.get('REDIS_PORT'))
+        s = g.read_set(self.s.get('WHITELIST_URL'))
+        try:
+            for i in s:
+                r = self.make_request(i)
+                g.save_sorted_set(self.s.get('REQUEST_KEY'), r, -5)
             self.logger.warning("Save {} requests successful".format(len(s)))
         except:
             self.logger.warning("Save {} requests failed".format(len(s)))
 
     def send_request(self):
         self.timer = time.clock() - self.start
-        if self.timer > 3600 + 1800 and self.already_scheduler:
-            self.insert_request()
-            self.already_scheduler = 1
+        if 3600 < self.timer < 3600 + 1800 and self.flag == 0:
+            self.insert_domain_request()
+            self.flag = 1
             self.start = time.clock()
             self.logger.info("Send index to request")
-        elif 3600 < self.timer < 3600 + 1800:
-            self.insert_request()
-            self.already_scheduler = 1
+        elif 3600 < self.timer < 3600 + 1800 and self.flag == 1:
+            self.insert_domain_request()
+            self.insert_url_request()
+            self.flag = 0
             self.start = time.clock()
             self.logger.info("Send index to request")

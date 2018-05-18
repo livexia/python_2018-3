@@ -52,7 +52,7 @@ ROBOTSTXT_OBEY = True
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
-   'consumer.middlewares.ConsumerDownloaderMiddleware': 543,
+    'consumer.middlewares.ConsumerDownloaderMiddleware': 543,
 }
 
 # Enable or disable extensions
@@ -65,9 +65,9 @@ EXTENSIONS = {
 
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
-ITEM_PIPELINES = {
-    'consumer.pipelines.ConsumerPipeline': 300,
-}
+# ITEM_PIPELINES = {
+#     'consumer.pipelines.ConsumerPipeline': 300,
+# }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://doc.scrapy.org/en/latest/topics/autothrottle.html
@@ -107,8 +107,7 @@ ITEM_PIPELINES = {
     # 'scrapy_redis.pipelines.RedisPipeline': 400
 }
 
-# 序列化项目管道作为redis Key存储
-REDIS_ITEMS_KEY = '%(spider)s:items'
+
 
 # 指定用于连接redis的URL（可选）
 # 如果设置此项，则此项优先级高于设置的REDIS_HOST 和 REDIS_PORT
@@ -116,7 +115,19 @@ REDIS_ITEMS_KEY = '%(spider)s:items'
 REDIS_HOST = '127.0.0.1'
 REDIS_PORT = '6380'
 
-DEPTH_LIMIT = 5
+
+# 序列化项目管道作为redis Key存储
+REDIS_ITEMS_KEY = '%(spider)s:items'
+# Request 存储
+REQUEST_KEY = 'consumers:requests'
+# 列表索引页 域名
+WHITELIST_DOMAIN = "consumers:whitelist_domains"
+# 列表索引页 URL
+WHITELIST_URL = "consumers:whitelist_urls"
+# 垃圾页 域名
+BLACKLIST_DOMAIN = "consumers:blacklist_domain"
+# 垃圾页 URL
+BLACKLIST_URL = "consumers:blacklist_urls"
 
 # MONGODB 主机名
 MONGODB_HOST = "127.0.0.1"
@@ -127,5 +138,5 @@ MONGODB_DBNAME = "Extract_News"
 # 存放数据的表名称
 MONGODB_SHEETNAME = "Item"
 
-
 CONCURRENT_REQUESTS = 100
+DEPTH_LIMIT = 5

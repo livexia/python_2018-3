@@ -20,11 +20,12 @@ class ConsumerPipeline(object):
 
 class MongoPipeline(object):
     def __init__(self, settings):
-        host = settings.get("MONGODB_HOST")
-        port = settings.get("MONGODB_PORT")
-        dbname = settings.get("MONGODB_DBNAME")
-        sheetname = settings.get("MONGODB_SHEETNAME")
-        self.g = GeneralRedis(settings.get('REDIS_HOST'), settings.get('REDIS_PORT'))
+        self.s = settings
+        host = self.s.get("MONGODB_HOST")
+        port = self.s.get("MONGODB_PORT")
+        dbname = self.s.get("MONGODB_DBNAME")
+        sheetname = self.s.get("MONGODB_SHEETNAME")
+        self.g = GeneralRedis(self.s.get('REDIS_HOST'), self.s.get('REDIS_PORT'))
 
         # 创建MONGODB数据库链接
         client = pymongo.MongoClient(host=host, port=port)
@@ -41,15 +42,23 @@ class MongoPipeline(object):
         data = dict(item)
         try:
             if type(item).__name__ == 'IndexItem':
-                domain = urlparse(data['url'])
-                index_url = (domain.scheme + "://" + domain.netloc).encode('utf-8')
+                result = urlparse(data['url'])
+                domain_url = (result.scheme + "://" + result.netloc).encode('utf-8')
+                none_query_url = (result.scheme + "://" + result.netloc + result.path).encode('utf-8')
+                print(domain_url, none_query_url)
+
                 flag = input("{} type:".format(data['url']))
                 if flag == '0':
-                    self.g.save_set('consumer:whitelist', data['url'])
+                    self.g.save_set(self.s.get('WHITELIST_URL'), domain_url)
                 elif flag == '1':
-                    self.g.save_set('consumer:blacklist', index_url)
+                    self.g.save_set(self.s.get('WHITELIST_DOMAIN'), none_query_url)
                 elif flag == '2':
-                    self.g.save_set('consumer:blacklist', data['url'])
+                    self.g.save_set(self.s.get('BLACKLIST_DOMAIN'), domain_url)
+                elif flag == '3':
+                    self.g.save_set(self.s.get('BLACKLIST_URL'), none_query_url)
+                elif flag == '4':
+                    url = input("输入想要加入名单的url：")
+                    self.g.save_set(self.s.get('BLACKLIST_URL'), url)
                 else:
                     pass
                 raise DropItem("Index item found: %s" % item)
