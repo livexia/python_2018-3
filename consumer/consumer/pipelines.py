@@ -50,6 +50,8 @@ class MongoPipeline(object):
                     self.g.save_set('consumer:blacklist', index_url)
                 elif flag == '2':
                     self.g.save_set('consumer:blacklist', data['url'])
+                else:
+                    pass
                 raise DropItem("Index item found: %s" % item)
             else:
                 match_doc = self.post.find_one({"_id": data['_id']})

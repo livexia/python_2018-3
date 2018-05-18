@@ -10,6 +10,9 @@ import random
 from scrapy.downloadermiddlewares.useragent import UserAgentMiddleware
 import logging
 from urllib.parse import urlparse
+
+from scrapy.exceptions import IgnoreRequest
+
 from .general_redis import GeneralRedis
 
 
@@ -128,6 +131,7 @@ class ConsumerDownloaderMiddleware(object):
 
         if g.set_sismember('consumer:blacklist', domain):
             print('ABCtest',p, domain)
+            raise IgnoreRequest
 
         return None
 
