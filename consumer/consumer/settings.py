@@ -112,25 +112,25 @@ ITEM_PIPELINES = {
 # 指定用于连接redis的URL（可选）
 # 如果设置此项，则此项优先级高于设置的REDIS_HOST 和 REDIS_PORT
 # REDIS_URL = 'redis://127.0.0.1:6380'
-REDIS_HOST = '127.0.0.1'
+REDIS_HOST = '192.168.0.101'
 REDIS_PORT = '6380'
 
 
 # 序列化项目管道作为redis Key存储
 REDIS_ITEMS_KEY = '%(spider)s:items'
 # Request 存储
-REQUEST_KEY = 'consumers:requests'
+REQUESTS_KEY = 'consumer:requests'
 # 列表索引页 域名
-WHITELIST_DOMAIN = "consumers:whitelist_domains"
+WHITELIST_DOMAINS = "consumer:whitelist_domains"
 # 列表索引页 URL
-WHITELIST_URL = "consumers:whitelist_urls"
+WHITELIST_URLS = "consumer:whitelist_urls"
 # 垃圾页 域名
-BLACKLIST_DOMAIN = "consumers:blacklist_domains"
+BLACKLIST_DOMAINS = "consumer:blacklist_domains"
 # 垃圾页 URL
-BLACKLIST_URL = "consumers:blacklist_urls"
+BLACKLIST_URLS = "consumer:blacklist_urls"
 
 # MONGODB 主机名
-MONGODB_HOST = "127.0.0.1"
+MONGODB_HOST = "192.168.0.101"
 # MONGODB 端口号
 MONGODB_PORT = 32679
 # 数据库名称
