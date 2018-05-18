@@ -40,29 +40,17 @@ logger = logging.getLogger(__name__)
 class NewspaperPatcher():
     @classmethod
     def from_crawler(cls, crawler):
-        if not crawler.settings.getbool("PATCHER_ENABLED"):
-            raise NotConfigured
-        # get the number of items from settings
 
-        # instantiate the extension object
         ext = cls()
 
         # connect the extension object to signals
-        crawler.signals.connect(ext.spider_opened, signal=signals.spider_opened)
-        crawler.signals.connect(ext.spider_closed, signal=signals.spider_closed)
-
+        crawler.signals.connect(ext.enable_patch, signal=signals.engine_started)
         # return the extension object
         return ext
 
-    def spider_opened(self, spider):
-        logger.info("opened spider %s", spider.name)
-        self.enable_patch()
-
-    def spider_closed(self, spider):
-        logger.info("closed spider %s", spider.name)
-
 
     def enable_patch(self):
+        logger.info("Enable monkey patch")
         Article.download = download
         Article.parse = parse
         Article.is_news = None
