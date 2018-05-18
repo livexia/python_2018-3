@@ -125,14 +125,16 @@ class ConsumerDownloaderMiddleware(object):
         # - or raise IgnoreRequest: process_exception() methods of
         #   installed downloader middleware will be called
         p = urlparse(request.url)
-        domain = p.scheme + "://" + p.netloc
+        domain_url = p.scheme + "://" + p.netloc
         g = GeneralRedis(self.s.get('REDIS_HOST'), self.s.get('REDIS_PORT'))
 
-        if g.set_sismember(self.s.get('BLACKLIST_DOMAIN'), domain):
-            logging.info('Found domain on blacklist {}'.format(domain))
+        print(p, domain_url)
+
+        if g.set_sismember(self.s.get('BLACKLIST_DOMAIN'), domain_url):
+            logging.info('Found domain on blacklist {}'.format(domain_url))
             raise IgnoreRequest
         elif g.set_sismember(self.s.get('BLACKLIST_URL'), request.url):
-            logging.info('Found url on blacklist {}'.format(domain))
+            logging.info('Found url on blacklist {}'.format(domain_url))
             raise IgnoreRequest
         return None
 

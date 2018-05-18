@@ -49,9 +49,9 @@ class MongoPipeline(object):
 
                 flag = input("{} type:".format(data['url']))
                 if flag == '0':
-                    self.g.save_set(self.s.get('WHITELIST_URL'), domain_url)
+                    self.g.save_set(self.s.get('WHITELIST_DOMAIN'), domain_url)
                 elif flag == '1':
-                    self.g.save_set(self.s.get('WHITELIST_DOMAIN'), none_query_url)
+                    self.g.save_set(self.s.get('WHITELIST_URL'), none_query_url)
                 elif flag == '2':
                     self.g.save_set(self.s.get('BLACKLIST_DOMAIN'), domain_url)
                 elif flag == '3':

@@ -125,7 +125,7 @@ WHITELIST_DOMAIN = "consumers:whitelist_domains"
 # 列表索引页 URL
 WHITELIST_URL = "consumers:whitelist_urls"
 # 垃圾页 域名
-BLACKLIST_DOMAIN = "consumers:blacklist_domain"
+BLACKLIST_DOMAIN = "consumers:blacklist_domains"
 # 垃圾页 URL
 BLACKLIST_URL = "consumers:blacklist_urls"
 
