@@ -9,7 +9,6 @@ from scrapy.exceptions import DropItem
 from consumer.general_redis import GeneralRedis
 from urllib.parse import urlparse
 
-
 logger = logging.getLogger('MongoPipeline')
 
 
@@ -42,29 +41,37 @@ class MongoPipeline(object):
         data = dict(item)
         try:
             if type(item).__name__ == 'IndexItem':
+
+                flag = input("{} type:".format(data['url']))
                 result = urlparse(data['url'])
                 domain_url = (result.scheme + "://" + result.netloc).encode('utf-8')
                 none_query_url = (result.scheme + "://" + result.netloc + result.path).encode('utf-8')
-                print(domain_url, none_query_url)
 
-                flag = input("{} type:".format(data['url']))
                 if flag == '0':
-                    self.g.save_set(self.s.get('WHITELIST_DOMAIN'), domain_url)
+                    self.g.save_set(self.s.get('WHITELIST_DOMAINS'), domain_url)
+                    logging.info('Add domain on whitelist {}'.format(domain_url))
                 elif flag == '1':
-                    self.g.save_set(self.s.get('WHITELIST_URL'), none_query_url)
+                    self.g.save_set(self.s.get('WHITELIST_URLS'), none_query_url)
+                    logging.info('Add domain on whitelist {}'.format(none_query_url))
+
                 elif flag == '2':
-                    self.g.save_set(self.s.get('BLACKLIST_DOMAIN'), domain_url)
+                    self.g.save_set(self.s.get('BLACKLIST_DOMAINS'), domain_url)
+                    logging.info('Add domain on blacklist {}'.format(domain_url))
                 elif flag == '3':
-                    self.g.save_set(self.s.get('BLACKLIST_URL'), none_query_url)
+                    self.g.save_set(self.s.get('BLACKLIST_URLS'), none_query_url)
+                    logging.info('Add domain on blacklist {}'.format(none_query_url))
                 elif flag == '4':
-                    url = input("输入想要加入名单的url：")
-                    self.g.save_set(self.s.get('BLACKLIST_URL'), url)
+                    url = input("input url to add blacklist：")
+                    self.g.save_set(self.s.get('BLACKLIST_URLS'), url)
+                    logging.info('Add domain on blacklist {}'.format(url))
                 else:
                     pass
+
+
                 raise DropItem("Index item found: %s" % item)
             else:
                 match_doc = self.post.find_one({"_id": data['_id']})
-                #TODO: 过滤以及id判定
+                # TODO: 过滤以及id判定
                 if match_doc:
                     # logger.debug("document existed", data)
                     raise DropItem("Duplicate item found: %s" % item)
@@ -72,7 +79,6 @@ class MongoPipeline(object):
                     # self.post.replace_one(match_doc, data)
                 else:
                     self.post.insert_one(data)
-                return item
+                    return item
         except DropItem as e:
             pass
-            return item

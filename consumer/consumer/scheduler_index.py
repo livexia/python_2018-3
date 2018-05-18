@@ -51,7 +51,7 @@ class MakeSaveRequest():
 
     def insert_domain_request(self):
         g = GeneralRedis(self.s.get('REDIS_HOST'), self.s.get('REDIS_PORT'))
-        s = g.read_set(self.s.get('WHITELIST_DOMAIN'))
+        s = g.read_set(self.s.get('WHITELIST_DOMAINS'))
         try:
             for i in s:
                 r = self.make_request(i)
@@ -62,11 +62,11 @@ class MakeSaveRequest():
 
     def insert_url_request(self):
         g = GeneralRedis(self.s.get('REDIS_HOST'), self.s.get('REDIS_PORT'))
-        s = g.read_set(self.s.get('WHITELIST_URL'))
+        s = g.read_set(self.s.get('WHITELIST_URLS'))
         try:
             for i in s:
                 r = self.make_request(i)
-                g.save_sorted_set(self.s.get('REQUEST_KEY'), r, -5)
+                g.save_sorted_set(self.s.get('REQUEST_KEYS'), r, -5)
             self.logger.warning("Save {} requests successful".format(len(s)))
         except:
             self.logger.warning("Save {} requests failed".format(len(s)))

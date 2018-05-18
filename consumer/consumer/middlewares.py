@@ -128,12 +128,10 @@ class ConsumerDownloaderMiddleware(object):
         domain_url = p.scheme + "://" + p.netloc
         g = GeneralRedis(self.s.get('REDIS_HOST'), self.s.get('REDIS_PORT'))
 
-        print(p, domain_url)
-
-        if g.set_sismember(self.s.get('BLACKLIST_DOMAIN'), domain_url):
+        if g.set_sismember(self.s.get('BLACKLIST_DOMAINS'), domain_url):
             logging.info('Found domain on blacklist {}'.format(domain_url))
             raise IgnoreRequest
-        elif g.set_sismember(self.s.get('BLACKLIST_URL'), request.url):
+        elif g.set_sismember(self.s.get('BLACKLIST_URLS'), request.url):
             logging.info('Found url on blacklist {}'.format(domain_url))
             raise IgnoreRequest
         return None
