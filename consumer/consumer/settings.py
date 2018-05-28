@@ -98,8 +98,8 @@ SCHEDULER_PERSIST = True
 
 # 指定排序爬取地址时使用的队列，默认是按照优先级排序
 # SCHEDULER_QUEUE_CLASS = 'scrapy_redis.queue.SpiderPriorityQueue'
-SCHEDULER_QUEUE_CLASS = 'scrapy_redis.queue.FifoQueue'
-
+# SCHEDULER_QUEUE_CLASS = 'scrapy_redis.queue.FifoQueue'
+SCHEDULER_QUEUE_CLASS = 'scrapy_redis.queue.LifoQueue'
 DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
 
 ITEM_PIPELINES = {
@@ -112,8 +112,8 @@ ITEM_PIPELINES = {
 # 指定用于连接redis的URL（可选）
 # 如果设置此项，则此项优先级高于设置的REDIS_HOST 和 REDIS_PORT
 # REDIS_URL = 'redis://127.0.0.1:6380'
-REDIS_HOST = '192.168.0.101'
-REDIS_PORT = '6380'
+REDIS_HOST = '192.168.0.102'
+REDIS_PORT = '6379'
 
 
 # 序列化项目管道作为redis Key存储
@@ -130,9 +130,9 @@ BLACKLIST_DOMAINS = "consumer:blacklist_domains"
 BLACKLIST_URLS = "consumer:blacklist_urls"
 
 # MONGODB 主机名
-MONGODB_HOST = "192.168.0.101"
+MONGODB_HOST = "192.168.0.102"
 # MONGODB 端口号
-MONGODB_PORT = 32679
+MONGODB_PORT = 27017
 # 数据库名称
 MONGODB_DBNAME = "Extract_News"
 # 存放数据的表名称
