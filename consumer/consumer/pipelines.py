@@ -85,3 +85,38 @@ class MongoPipeline(object):
                     return item
         except DropItem as e:
             pass
+
+
+class DownloaderPipeline(object):
+    def __init__(self, settings):
+        self.s = settings
+        host = self.s.get("MONGODB_HOST")
+        port = self.s.get("MONGODB_PORT")
+        dbname = "Raw_news"
+        sheetname = "items"
+
+        # 创建MONGODB数据库链接
+        client = pymongo.MongoClient(host=host, port=port)
+        # 指定数据库
+        mydb = client[dbname]
+        # 存放数据的数据库表名
+        self.post = mydb[sheetname]
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        return cls(crawler.settings)
+
+    def process_item(self, item, spider):
+        data = dict(item)
+        try:
+            match_doc = self.post.find_one({"_id": data['_id']})
+            if match_doc:
+                # logger.debug("document existed", data)
+                raise DropItem("Duplicate item found: %s" % item)
+                # raise
+                # self.post.replace_one(match_doc, data)
+            else:
+                self.post.insert_one(data)
+                return item
+        except DropItem as e:
+            pass

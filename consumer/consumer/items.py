@@ -24,3 +24,11 @@ class BroadcrawlerItem(scrapy.Item):
     content = scrapy.Field()
     author = scrapy.Field()
     _id = scrapy.Field()
+
+
+class DownloaderItem(scrapy.Item):
+    _id = scrapy.Field()
+    url = scrapy.Field()
+    html = scrapy.Field()
+    category = scrapy.Field()
+    meta = scrapy.Field()
