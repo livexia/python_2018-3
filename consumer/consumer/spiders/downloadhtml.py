@@ -22,6 +22,7 @@ class DownloadSpider(RedisCrawlSpider):
             'consumer.middlewares.ConsumerDownloaderMiddleware': None,
         },
         'DEPTH_LIMIT': 3,
+        'LOG_LEVEL': 'WARNING',
     }
     allowed_domains = ['sina.com.cn', 'sohu.com', 'ifeng.com']
     denied_domains = ['ka.sina.com.cn']
