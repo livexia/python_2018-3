@@ -22,7 +22,7 @@ class DownloadSpider(RedisCrawlSpider):
             'consumer.middlewares.ConsumerDownloaderMiddleware': None,
         },
         'DEPTH_LIMIT': 3,
-        'LOG_LEVEL': 'WARNING',
+        'LOG_LEVEL': 'DEBUG',
         'CONCURRENT_REQUESTS':16,
         'SCHEDULER_QUEUE_CLASS': 'scrapy_redis.queue.SpiderPriorityQueue'
 
