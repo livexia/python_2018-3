@@ -38,8 +38,6 @@ class DownloadSpider(RedisCrawlSpider):
         item['_id'] = hashlib.md5(response.url.encode('utf-8')).hexdigest()
         item['url'] = response.url
         item['meta'] = response.meta
-        item['html'] = response.text
-
-        print(item)
-
+        item['html'] = response.body
+        item['category'] = response.meta['link_text']
         yield item

@@ -117,6 +117,6 @@ class DownloaderPipeline(object):
                 # self.post.replace_one(match_doc, data)
             else:
                 self.post.insert_one(data)
-                return item
+                # return item
         except DropItem as e:
             pass
