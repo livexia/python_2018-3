@@ -23,7 +23,8 @@ class DownloadSpider(RedisCrawlSpider):
         },
         'DEPTH_LIMIT': 3,
         'LOG_LEVEL': 'WARNING',
-        'CONCURRENT_REQUESTS':20
+        'CONCURRENT_REQUESTS':16,
+        'SCHEDULER_QUEUE_CLASS': 'scrapy_redis.queue.SpiderPriorityQueue'
 
     }
     allowed_domains = ['sina.com.cn', 'sohu.com', 'ifeng.com']
