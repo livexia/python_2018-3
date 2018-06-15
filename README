@@ -17,7 +17,7 @@ consumer
 │   ├── middlewares.py	#下载中间件的保存位置。
 │   ├── patcher.py	#newspaper的猴子补丁，编写成Scrapy Extensions 在 engine启动时进行补丁。
 │   ├── pipelines.py	#mongopipeline，保存item和手动过滤垃圾页面
-│   ├── scheduler_index.py		#每隔大约一小时将列表页、索引页再调度进requests队列，以Scrapy Extensions实现。
+│   ├── scheduler_index.py #每隔大约一小时将列表页、索引页再调度进requests队列，以Scrapy Extensions实现。
 │   ├── settings.py	#Scrapy设置。
 │   └── spiders
 │       ├── consumer.py	# 解析部分，基本由谢毅鑫完成，我只负责逻辑结构，故不进行阐述。
